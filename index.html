@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HydrateMind: Akıllı Su Hatırlatıcısı</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow: hidden; /* Prevent scrollbars on the main body */
+        position: relative;
+        background-color: #f8fafc; /* Light mode BG */
+      }
+      .dark body {
+        background-color: #09090b; /* Dark mode BG */
+      }
+      
+      @keyframes aurora-flow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
+      /* Aurora Background Effect */
+      body::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.15), transparent 40%),
+                    radial-gradient(circle at 85% 30%, rgba(13, 148, 252, 0.15), transparent 40%),
+                    radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.1), transparent 35%);
+        background-size: 200% 200%;
+        z-index: -1;
+        animation: aurora-flow 20s ease-in-out infinite;
+      }
+      .dark body::before {
+        background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.2), transparent 40%),
+                    radial-gradient(circle at 85% 30%, rgba(13, 148, 252, 0.2), transparent 40%),
+                    radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.15), transparent 35%);
+        background-size: 200% 200%;
+      }
+
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
