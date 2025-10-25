@@ -1,21 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { OnboardingStep, UserProfile, UserCategory, WaterHabit, UrineColor, NotificationSound } from './types';
+import { OnboardingStep, UserProfile, UserCategory, WaterHabit, NotificationSound, HydrationLog, AppSound } from './types';
 import { CategorySelector } from './components/Onboarding/CategorySelector';
 import { MetricsForm } from './components/Onboarding/MetricsForm';
 import { HabitSelector } from './components/Onboarding/HabitSelector';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { SettingsScreen } from './components/Settings/SettingsScreen';
+import { CalendarView } from './components/Calendar/CalendarView';
 import { triggerHapticFeedback } from './haptics';
 import { ArrowLeftIcon } from './components/icons/ArrowLeftIcon';
 import { getTheme, Theme } from './styles/theme';
 import { calculateDailyGoal } from './utils/hydration';
-import { showNotification } from './services/notificationService';
+import { playAppSound, showNotification } from './services/notificationService';
 import { generateReminderMessage } from './services/geminiService';
 
 const OnboardingContainer: React.FC<{ children: React.ReactNode; onNext?: () => void; nextDisabled?: boolean; nextText?: string; onBack?: () => void; theme: Theme }> = ({ children, onNext, nextDisabled = false, nextText = 'Devam Et', onBack, theme }) => {
   const handleNext = () => {
     if (onNext) {
       triggerHapticFeedback(50); // Stronger feedback for progression
+      playAppSound(AppSound.Tap);
       onNext();
     }
   };
@@ -23,6 +25,7 @@ const OnboardingContainer: React.FC<{ children: React.ReactNode; onNext?: () => 
   const handleBack = () => {
     if (onBack) {
       triggerHapticFeedback(); // Default feedback for back action
+      playAppSound(AppSound.Tap);
       onBack();
     }
   };
@@ -71,9 +74,32 @@ const App: React.FC = () => {
     notificationSound: NotificationSound.Default,
   });
   const [isSettingsOpen, setSettingsOpen] = useState(false);
+  const [isCalendarOpen, setCalendarOpen] = useState(false);
+  const [hydrationLog, setHydrationLog] = useState<HydrationLog>({});
   const reminderTimers = useRef<number[]>([]);
 
   const theme = getTheme(profile.category);
+
+  // Load log from localStorage on initial render
+  useEffect(() => {
+    try {
+        const savedLog = window.localStorage.getItem('hydrationLog');
+        if (savedLog) {
+            setHydrationLog(JSON.parse(savedLog));
+        }
+    } catch (error) {
+        console.error("Failed to load hydration log from localStorage", error);
+    }
+  }, []);
+
+  // Save log to localStorage whenever it changes
+  useEffect(() => {
+    try {
+        window.localStorage.setItem('hydrationLog', JSON.stringify(hydrationLog));
+    } catch (error) {
+        console.error("Failed to save hydration log to localStorage", error);
+    }
+  }, [hydrationLog]);
   
   // Effect to handle reminder scheduling
   useEffect(() => {
@@ -155,6 +181,14 @@ const App: React.FC = () => {
     setProfile(updatedProfile);
     setSettingsOpen(false);
   }
+  
+  const handleLogWater = (intake: number, goal: number) => {
+      const todayString = new Date().toISOString().split('T')[0];
+      setHydrationLog(prevLog => ({
+          ...prevLog,
+          [todayString]: { intake, goal },
+      }));
+  };
 
   const renderStep = () => {
     switch (step) {
@@ -199,8 +233,11 @@ const App: React.FC = () => {
       case OnboardingStep.Dashboard:
         return <Dashboard 
                   profile={profile} 
+                  hydrationLog={hydrationLog}
                   onProfileChange={handleProfileChange} 
                   onOpenSettings={() => setSettingsOpen(true)}
+                  onOpenCalendar={() => setCalendarOpen(true)}
+                  onLogWater={handleLogWater}
                />;
       default:
         return <div>Bilinmeyen adım</div>;
@@ -209,11 +246,12 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen w-screen font-sans text-zinc-900 dark:text-gray-100 bg-gray-100 dark:bg-zinc-900">
-      <div className="max-w-md mx-auto h-full backdrop-blur-3xl bg-white/70 dark:bg-black/30 border-r border-l border-white/50 dark:border-white/10 shadow-2xl shadow-gray-400/20 dark:shadow-black/50 overflow-hidden relative">
+      <div className="w-full h-full md:max-w-md md:mx-auto backdrop-blur-3xl bg-white/70 dark:bg-black/30 md:border-r md:border-l border-white/50 dark:border-white/10 md:shadow-2xl shadow-gray-400/20 dark:shadow-black/50 overflow-hidden relative">
         <div className="w-full h-full overflow-y-auto no-scrollbar">
           {renderStep()}
         </div>
         {isSettingsOpen && <SettingsScreen profile={profile} onClose={handleSettingsClose} />}
+        {isCalendarOpen && <CalendarView log={hydrationLog} onClose={() => setCalendarOpen(false)} />}
       </div>
     </div>
   );

@@ -23,6 +23,12 @@ export enum NotificationSound {
     Default = 'Varsayılan',
 }
 
+export enum AppSound {
+  AddWater,
+  GoalReached,
+  Tap,
+}
+
 export interface UserProfile {
   category: UserCategory | null;
   weight: number;
@@ -39,6 +45,15 @@ export enum OnboardingStep {
   Metrics,
   Habits,
   Dashboard
+}
+
+export interface HydrationLogEntry {
+  intake: number;
+  goal: number;
+}
+
+export interface HydrationLog {
+  [date: string]: HydrationLogEntry;
 }
 
 export interface Reminder {

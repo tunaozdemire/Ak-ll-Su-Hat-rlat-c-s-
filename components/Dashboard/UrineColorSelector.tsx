@@ -2,6 +2,8 @@ import React from 'react';
 import { UrineColor } from '../../types';
 import { triggerHapticFeedback } from '../../haptics';
 import { Theme } from '../../styles/theme';
+import { playAppSound } from '../../services/notificationService';
+import { AppSound } from '../../types';
 
 interface UrineColorSelectorProps {
   onSelect: (color: UrineColor) => void;
@@ -16,10 +18,15 @@ export const UrineColorSelector: React.FC<UrineColorSelectorProps> = ({ onSelect
     { id: UrineColor.Dehydrated, label: 'Dehidre', ...theme.urineColors.dehydrated },
   ];
 
+  const handleClose = () => {
+    playAppSound(AppSound.Tap);
+    onClose();
+  };
+
   return (
     <div 
       className="fixed inset-0 bg-black/50 backdrop-blur-lg flex items-center justify-center z-50 animate-fade-in"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div 
         className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-3xl p-10 rounded-[2.5rem] w-11/12 max-w-md text-center shadow-2xl border border-white/20 dark:border-white/10"
@@ -35,6 +42,7 @@ export const UrineColorSelector: React.FC<UrineColorSelectorProps> = ({ onSelect
               onClick={() => {
                 onSelect(id);
                 triggerHapticFeedback(50);
+                playAppSound(AppSound.Tap);
               }}
               className={`
                 w-full flex items-center p-5 rounded-2xl transition-all duration-200
@@ -48,7 +56,7 @@ export const UrineColorSelector: React.FC<UrineColorSelectorProps> = ({ onSelect
           ))}
         </div>
 
-        <button onClick={onClose} className="mt-10 text-sm font-medium text-zinc-500 dark:text-gray-400 hover:underline">
+        <button onClick={handleClose} className="mt-10 text-sm font-medium text-zinc-500 dark:text-gray-400 hover:underline">
             İptal
         </button>
       </div>

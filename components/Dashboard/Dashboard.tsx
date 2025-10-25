@@ -1,22 +1,36 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
-import { UserProfile, UrineColor } from '../../types';
+import { UserProfile, UrineColor, AppSound, HydrationLog } from '../../types';
 import { DynamicWaterDrop } from './DynamicWaterDrop';
 import { UrineColorSelector } from './UrineColorSelector';
 import { triggerHapticFeedback } from '../../haptics';
 import { SettingsIcon } from '../icons/SettingsIcon';
+import { CalendarIcon } from '../icons/CalendarIcon';
 import { calculateDailyGoal } from '../../utils/hydration';
 import { getTheme } from '../../styles/theme';
+import { playAppSound } from '../../services/notificationService';
 
 
 interface DashboardProps {
   profile: UserProfile;
+  hydrationLog: HydrationLog;
   onProfileChange: (newProfile: UserProfile) => void;
   onOpenSettings: () => void;
+  onOpenCalendar: () => void;
+  onLogWater: (intake: number, goal: number) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ profile, onProfileChange, onOpenSettings }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ profile, hydrationLog, onProfileChange, onOpenSettings, onOpenCalendar, onLogWater }) => {
   const [isUrineModalOpen, setUrineModalOpen] = useState(false);
   
+  const todayString = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const [currentIntake, setCurrentIntake] = useState(hydrationLog[todayString]?.intake || 0);
+
+  useEffect(() => {
+    // Syncs state if the log changes from outside or is loaded from storage
+    setCurrentIntake(hydrationLog[todayString]?.intake || 0);
+  }, [hydrationLog, todayString]);
+
   useEffect(() => {
     // Request notification permission when dashboard is first shown, if not already decided.
     if ('Notification' in window && Notification.permission === 'default') {
@@ -30,8 +44,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ profile, onProfileChange, 
   
   const theme = useMemo(() => getTheme(profile.category), [profile.category]);
 
-  const [currentIntake, setCurrentIntake] = useState(0);
-
   const progress = Math.min((currentIntake / dailyGoal) * 100, 100);
 
   // Dynamic font size calculation
@@ -42,13 +54,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ profile, onProfileChange, 
   const addWater = (amount: number) => {
     const wasGoalMet = currentIntake >= dailyGoal;
     const newIntake = currentIntake + amount;
+    setCurrentIntake(newIntake);
+    onLogWater(newIntake, dailyGoal);
+
     const isGoalMetNow = newIntake >= dailyGoal;
 
     if (!wasGoalMet && isGoalMetNow) {
       // Success pattern when goal is reached for the first time
       triggerHapticFeedback([100, 30, 100]);
+      playAppSound(AppSound.GoalReached);
+    } else {
+      playAppSound(AppSound.AddWater);
     }
-    setCurrentIntake(newIntake);
   };
 
   const handleUrineSelect = (color: UrineColor) => {
@@ -58,11 +75,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ profile, onProfileChange, 
 
   return (
     <>
-      <div className="absolute top-6 right-6 z-10">
+      <div className="absolute top-6 right-6 z-10 flex items-center gap-2">
+          <button 
+              onClick={() => {
+                onOpenCalendar();
+                triggerHapticFeedback();
+                playAppSound(AppSound.Tap);
+              }} 
+              className="text-zinc-800 dark:text-white transition-all p-3 rounded-full backdrop-blur-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-white/20 dark:border-white/10 active:scale-90"
+          >
+            <CalendarIcon className="w-6 h-6" />
+          </button>
           <button 
               onClick={() => {
                 onOpenSettings();
                 triggerHapticFeedback();
+                playAppSound(AppSound.Tap);
               }} 
               className="text-zinc-800 dark:text-white transition-all p-3 rounded-full backdrop-blur-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-white/20 dark:border-white/10 active:scale-90"
           >
@@ -97,6 +125,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ profile, onProfileChange, 
                 onClick={() => {
                     setUrineModalOpen(true);
                     triggerHapticFeedback();
+                    playAppSound(AppSound.Tap);
                 }}
                 className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
             >

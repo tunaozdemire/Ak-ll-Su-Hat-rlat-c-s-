@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
-import { UserProfile, NotificationSound } from '../../types';
+import { UserProfile, NotificationSound, AppSound } from '../../types';
 import { triggerHapticFeedback } from '../../haptics';
 import { CheckIcon } from '../icons/CheckIcon';
+import { playAppSound } from '../../services/notificationService';
 
 interface SettingsScreenProps {
   profile: UserProfile;
@@ -20,6 +20,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ profile, onClose
 
   const handleSave = () => {
     triggerHapticFeedback(50);
+    playAppSound(AppSound.Tap);
     onClose(localProfile);
   };
   
@@ -30,6 +31,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ profile, onClose
           onClick={() => {
             setLocalProfile(p => ({ ...p, notificationSound: option.id }));
             triggerHapticFeedback();
+            playAppSound(AppSound.Tap);
           }}
           className={`
             w-full p-4 text-left flex items-center justify-between
@@ -49,7 +51,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ profile, onClose
 
   return (
     <div className="fixed inset-0 bg-gray-100 dark:bg-zinc-900 z-50 flex flex-col animate-slide-up">
-        <div className="max-w-md mx-auto h-full w-full backdrop-blur-3xl bg-white/70 dark:bg-black/30 border-r border-l border-white/50 dark:border-white/10 shadow-2xl shadow-gray-400/20 dark:shadow-black/50 overflow-hidden relative p-6 pt-20">
+        <div className="w-full h-full md:max-w-md md:mx-auto backdrop-blur-3xl bg-white/70 dark:bg-black/30 md:border-r md:border-l border-white/50 dark:border-white/10 md:shadow-2xl shadow-gray-400/20 dark:shadow-black/50 overflow-hidden relative p-6 pt-20">
             
             <header className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between z-20">
                 <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Ayarlar</h1>

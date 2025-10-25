@@ -4,6 +4,8 @@ import { triggerHapticFeedback } from '../../haptics';
 import { AthleteIcon } from '../icons/AthleteIcon';
 import { BusinessPersonIcon } from '../icons/BusinessPersonIcon';
 import { StudentIcon } from '../icons/StudentIcon';
+import { playAppSound } from '../../services/notificationService';
+import { AppSound } from '../../types';
 
 interface CategorySelectorProps {
   onSelect: (category: UserCategory) => void;
@@ -44,6 +46,7 @@ const CategoryCard: React.FC<{ category: typeof categories[0], isSelected: boole
       onClick={() => {
         onClick();
         triggerHapticFeedback();
+        playAppSound(AppSound.Tap);
       }}
       className={`
         w-full p-6 rounded-3xl text-center group

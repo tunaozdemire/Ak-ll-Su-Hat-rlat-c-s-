@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Theme } from '../../styles/theme';
+import { playAppSound } from '../../services/notificationService';
+import { AppSound } from '../../types';
 
 interface MetricsFormProps {
   weight: number;
@@ -97,7 +99,10 @@ export const MetricsForm: React.FC<MetricsFormProps> = ({ weight, height, onWeig
         {(Object.keys(metricConfig) as Array<keyof typeof metricConfig>).map((key) => (
           <button
             key={key}
-            onClick={() => setActiveMetric(key)}
+            onClick={() => {
+                setActiveMetric(key);
+                playAppSound(AppSound.Tap);
+            }}
             className={`px-8 py-2 rounded-full text-sm font-semibold transition-all duration-300 ease-in-out
               ${activeMetric === key ? `${theme.background} text-white dark:text-zinc-900 shadow-md ${theme.shadow}` : 'text-zinc-600 dark:text-zinc-400'}`}
           >

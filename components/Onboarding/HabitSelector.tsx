@@ -4,6 +4,8 @@ import { WaterHabit } from '../../types';
 import { CheckIcon } from '../icons/CheckIcon';
 import { triggerHapticFeedback } from '../../haptics';
 import { Theme } from '../../styles/theme';
+import { playAppSound } from '../../services/notificationService';
+import { AppSound } from '../../types';
 
 interface HabitSelectorProps {
   onSelect: (habit: WaterHabit) => void;
@@ -22,6 +24,7 @@ const HabitButton: React.FC<{ habit: typeof habits[0], isSelected: boolean, onCl
     onClick={() => {
       onClick();
       triggerHapticFeedback();
+      playAppSound(AppSound.Tap);
     }}
     className={`
       w-full p-5 text-left flex items-center justify-between

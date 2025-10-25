@@ -1,4 +1,5 @@
-import { NotificationSound } from '../types';
+
+import { NotificationSound, AppSound } from '../types';
 
 // Use a self-initializing function to create a singleton AudioContext
 const getAudioContext = (() => {
@@ -7,6 +8,10 @@ const getAudioContext = (() => {
         if (typeof window !== 'undefined' && (window.AudioContext || (window as any).webkitAudioContext)) {
             if (!audioContext) {
                  audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            }
+            // Resume context on any user interaction that might play a sound
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
             }
             return audioContext;
         }
@@ -41,7 +46,7 @@ const playTone = (frequency: number, duration: number, type: OscillatorType) => 
     oscillator.stop(ctx.currentTime + duration);
 }
 
-const playSound = (sound: NotificationSound) => {
+const playNotificationSound = (sound: NotificationSound) => {
     switch (sound) {
         case NotificationSound.Drop:
             // A soft, high-pitched "drop"
@@ -60,6 +65,25 @@ const playSound = (sound: NotificationSound) => {
     }
 };
 
+export const playAppSound = (sound: AppSound) => {
+    switch (sound) {
+        case AppSound.AddWater:
+            // A short, satisfying "blip"
+            playTone(400, 0.15, 'sine');
+            break;
+        case AppSound.GoalReached:
+            // A positive, ascending chime
+            playTone(523, 0.1, 'sine'); // C5
+            setTimeout(() => playTone(659, 0.1, 'sine'), 120); // E5
+            setTimeout(() => playTone(784, 0.2, 'sine'), 240); // G5
+            break;
+        case AppSound.Tap:
+            // A subtle, low-frequency tap for UI interactions
+            playTone(200, 0.05, 'sine');
+            break;
+    }
+};
+
 export const showNotification = (message: string, sound: NotificationSound) => {
     if ('Notification' in window && Notification.permission === 'granted') {
         const notification = new Notification('HydrateMind', {
@@ -68,7 +92,7 @@ export const showNotification = (message: string, sound: NotificationSound) => {
             icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💧</text></svg>',
             silent: true, // We will play our own sound
         });
-        playSound(sound);
+        playNotificationSound(sound);
 
         notification.onclick = () => {
             window.focus();
@@ -77,6 +101,6 @@ export const showNotification = (message: string, sound: NotificationSound) => {
     } else {
         console.warn(`Notification permission not granted. Message: ${message}`);
         // As a fallback, still play the sound if possible for in-app feedback
-        playSound(sound);
+        playNotificationSound(sound);
     }
 };
